@@ -9,7 +9,7 @@ st.set_page_config(page_title="Provenance", page_icon="📚")
 st.title("Provenance")
 st.caption("A research assistant that verifies every citation against its source before showing it to you.")
 
-research_tab, search_tab = st.tabs(["Research", "Raw search"])
+research_tab, search_tab, history_tab = st.tabs(["Research", "Raw search", "History"])
 
 
 def render_paper_meta(paper: dict) -> str:
@@ -19,6 +19,32 @@ def render_paper_meta(paper: dict) -> str:
     if paper.get("citation_count") is not None:
         meta.append(f"{paper['citation_count']} citations")
     return " · ".join(meta) + f"  ·  source: {paper['source']}"
+
+
+def render_research_result(summary: dict, papers: list[dict]) -> None:
+    papers_by_id = {p["source_id"]: p for p in papers}
+    citations = summary["citations"]
+    verified_count = sum(1 for c in citations if c["verified"])
+
+    st.subheader("Overview")
+    st.write(summary["overview"])
+
+    if citations:
+        st.caption(f"{verified_count} of {len(citations)} claims verified against their cited sources")
+
+    for citation in citations:
+        badge = "✅ Verified" if citation["verified"] else "⚠️ Not verified"
+        with st.container(border=True):
+            st.markdown(f"{badge}  —  {citation['claim']}")
+            for source_id in citation["source_ids"]:
+                paper = papers_by_id.get(source_id)
+                if paper:
+                    st.caption(f"[{paper['title']}]({paper['url']})")
+                else:
+                    st.caption(f"⚠️ cited source `{source_id}` was not in the retrieved papers")
+
+    if not citations:
+        st.info("No citable claims were produced for this query.")
 
 
 with research_tab:
@@ -42,29 +68,7 @@ with research_tab:
                 result = None
 
         if result:
-            papers_by_id = {p["source_id"]: p for p in result["papers"]}
-            citations = result["summary"]["citations"]
-            verified_count = sum(1 for c in citations if c["verified"])
-
-            st.subheader("Overview")
-            st.write(result["summary"]["overview"])
-
-            if citations:
-                st.caption(f"{verified_count} of {len(citations)} claims verified against their cited sources")
-
-            for citation in citations:
-                badge = "✅ Verified" if citation["verified"] else "⚠️ Not verified"
-                with st.container(border=True):
-                    st.markdown(f"{badge}  —  {citation['claim']}")
-                    for source_id in citation["source_ids"]:
-                        paper = papers_by_id.get(source_id)
-                        if paper:
-                            st.caption(f"[{paper['title']}]({paper['url']})")
-                        else:
-                            st.caption(f"⚠️ cited source `{source_id}` was not in the retrieved papers")
-
-            if not citations:
-                st.info("No citable claims were produced for this query.")
+            render_research_result(result["summary"], result["papers"])
 
 
 with search_tab:
@@ -96,3 +100,31 @@ with search_tab:
                 if paper.get("abstract"):
                     with st.expander("Abstract"):
                         st.write(paper["abstract"])
+
+
+with history_tab:
+    st.caption("Past research sessions, persisted in Postgres.")
+    try:
+        response = requests.get(f"{API_BASE_URL}/sessions", timeout=10)
+        response.raise_for_status()
+        sessions = response.json()
+    except requests.RequestException as exc:
+        st.error(f"Could not load session history: {exc}")
+        sessions = []
+
+    if not sessions:
+        st.info("No saved sessions yet — run a query in the Research tab first.")
+
+    for session in sessions:
+        created_at = session["created_at"].replace("T", " ")[:16]
+        label = f"{created_at} UTC  —  {session['query']}"
+        with st.expander(label):
+            st.write(session["overview"])
+            if st.button("Load full result", key=f"load_{session['id']}"):
+                try:
+                    detail_response = requests.get(f"{API_BASE_URL}/sessions/{session['id']}", timeout=10)
+                    detail_response.raise_for_status()
+                    detail = detail_response.json()
+                    render_research_result(detail["summary"], detail["papers"])
+                except requests.RequestException as exc:
+                    st.error(f"Could not load session: {exc}")

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -49,3 +49,22 @@ class ResearchResult(BaseModel):
     query: str
     summary: ResearchSummary
     papers: list[Paper] = Field(default_factory=list)
+
+
+class SessionListItem(BaseModel):
+    """One row in the session history list — light enough to list many at once."""
+
+    id: int
+    query: str
+    overview: str
+    created_at: datetime
+
+
+class SavedSession(BaseModel):
+    """A previously saved ResearchResult, as read back from storage."""
+
+    id: int
+    query: str
+    summary: ResearchSummary
+    papers: list[Paper] = Field(default_factory=list)
+    created_at: datetime

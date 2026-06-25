@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash-lite"
     semantic_scholar_api_key: str = ""
     database_url: str = "postgresql://provenance:provenance@localhost:5432/provenance"
-    chroma_persist_dir: str = "./chroma_data"
 
     arxiv_max_results: int = 20
     semantic_scholar_max_results: int = 20

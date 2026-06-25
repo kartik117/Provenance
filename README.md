@@ -19,11 +19,11 @@ All four agents are wired into a single LangGraph `StateGraph` (`src/provenance/
 
 ## Status
 
-Core pipeline, API, and UI are working end-to-end against live ArXiv/Semantic Scholar/Gemini. A RAGAS evaluation harness is in place (see below). Session storage (Postgres + Chroma) and Docker packaging are still in progress.
+Core pipeline, API, UI, RAGAS evaluation, and Postgres session history are all working end-to-end against live ArXiv/Semantic Scholar/Gemini. Docker packaging is still in progress.
 
 ## Stack
 
-LangGraph · FastAPI · Streamlit · Gemini · Chroma · PostgreSQL · RAGAS
+LangGraph · FastAPI · Streamlit · Gemini · PostgreSQL · RAGAS
 
 ## Local setup
 
@@ -46,6 +46,8 @@ streamlit run app/streamlit_app.py
 Open the **Research** tab and ask a question like "reducing hallucination in retrieval augmented generation."
 
 Note: Gemini's free tier caps each model at **20 requests/day**, and `/research` costs 3 calls (filter, synthesize, verify) per query — so expect roughly 6 free queries/day on a given model before it 429s.
+
+Every `/research` call is saved to Postgres and browsable in the **History** tab. Needs a running Postgres matching `DATABASE_URL` in `.env` (e.g. `brew services start postgresql@16` and create the `provenance` role/db, or via Docker once that's added) — if it's not reachable, `/research` still works, it just skips persistence.
 
 ## Evaluation
 
