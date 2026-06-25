@@ -4,26 +4,11 @@ import respx
 from provenance.clients.semantic_scholar import SEMANTIC_SCHOLAR_API_URL, SemanticScholarClient
 from provenance.models import PaperSource
 
-SEMANTIC_SCHOLAR_RESPONSE = {
-    "total": 1,
-    "data": [
-        {
-            "paperId": "abc123",
-            "title": "Attention Is All You Need",
-            "abstract": "We propose the transformer architecture.",
-            "authors": [{"authorId": "1", "name": "Ashish Vaswani"}],
-            "url": "https://www.semanticscholar.org/paper/abc123",
-            "publicationDate": "2017-06-12",
-            "citationCount": 100000,
-        }
-    ],
-}
-
 
 @respx.mock
-async def test_search_parses_papers():
+async def test_search_parses_papers(semantic_scholar_single_paper):
     respx.get(SEMANTIC_SCHOLAR_API_URL).mock(
-        return_value=httpx.Response(200, json=SEMANTIC_SCHOLAR_RESPONSE)
+        return_value=httpx.Response(200, json=semantic_scholar_single_paper)
     )
 
     papers = await SemanticScholarClient().search("transformers")

@@ -16,6 +16,7 @@ dependencies = [
     "langchain-core>=0.3",
     "langchain-google-genai>=2.0",
     "streamlit>=1.39",
+    "requests>=2.32",
 ]
 
 [project.optional-dependencies]
