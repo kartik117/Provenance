@@ -3,6 +3,7 @@ import logging
 
 from fastapi import FastAPI
 
+from provenance.agents import dedupe
 from provenance.clients import ArxivClient, SemanticScholarClient
 from provenance.models import Paper
 
@@ -37,15 +38,4 @@ async def search(query: str, max_results: int = 10) -> list[Paper]:
             continue
         papers.extend(result)
 
-    return _dedupe(papers)
-
-
-def _dedupe(papers: list[Paper]) -> list[Paper]:
-    seen: set[str] = set()
-    deduped: list[Paper] = []
-    for paper in papers:
-        if paper.dedup_key in seen:
-            continue
-        seen.add(paper.dedup_key)
-        deduped.append(paper)
-    return deduped
+    return dedupe(papers)

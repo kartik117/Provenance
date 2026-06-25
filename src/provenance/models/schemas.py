@@ -20,6 +20,7 @@ class Paper(BaseModel):
     url: str
     published: date | None = None
     citation_count: int | None = None
+    relevance_score: float | None = None
 
     @property
     def dedup_key(self) -> str:
