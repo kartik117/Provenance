@@ -19,7 +19,7 @@ All four agents are wired into a single LangGraph `StateGraph` (`src/provenance/
 
 ## Status
 
-Core pipeline, API, UI, RAGAS evaluation, and Postgres session history are all working end-to-end against live ArXiv/Semantic Scholar/Gemini. Docker packaging is still in progress.
+Core pipeline, API, UI, RAGAS evaluation, Postgres session history, and Docker packaging are all working end-to-end against live ArXiv/Semantic Scholar/Gemini.
 
 ## Stack
 
@@ -37,17 +37,30 @@ pytest
 
 ## Running it
 
+**Docker (recommended — runs Postgres, the API, and the UI together):**
+
+```bash
+cp .env.example .env   # add your GOOGLE_API_KEY
+docker compose up --build
+```
+
+API on `localhost:8000`, UI on `localhost:8501`.
+
+**Without Docker:**
+
 ```bash
 source .venv/bin/activate
 uvicorn provenance.api.main:app --port 8000 &
 streamlit run app/streamlit_app.py
 ```
 
-Open the **Research** tab and ask a question like "reducing hallucination in retrieval augmented generation."
+Needs a running Postgres matching `DATABASE_URL` in `.env` (e.g. `brew services start postgresql@16` and create the `provenance` role/db) — if it's not reachable, `/research` still works, it just skips persistence.
+
+Either way, open the **Research** tab and ask a question like "reducing hallucination in retrieval augmented generation."
 
 Note: Gemini's free tier caps each model at **20 requests/day**, and `/research` costs 3 calls (filter, synthesize, verify) per query — so expect roughly 6 free queries/day on a given model before it 429s.
 
-Every `/research` call is saved to Postgres and browsable in the **History** tab. Needs a running Postgres matching `DATABASE_URL` in `.env` (e.g. `brew services start postgresql@16` and create the `provenance` role/db, or via Docker once that's added) — if it's not reachable, `/research` still works, it just skips persistence.
+Every `/research` call is saved to Postgres and browsable in the **History** tab.
 
 ## Evaluation
 
