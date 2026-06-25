@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from provenance.agents import SearchAgent, dedupe
-from provenance.models import Paper, ResearchSummary
+from provenance.models import Paper, ResearchResult
 from provenance.pipeline import build_pipeline
 
 app = FastAPI(title="Provenance", version="0.1.0")
@@ -20,8 +20,8 @@ async def search(query: str, max_results: int = 10) -> list[Paper]:
     return dedupe(papers)
 
 
-@app.get("/research", response_model=ResearchSummary)
-async def research(query: str, max_results: int = 10) -> ResearchSummary:
-    """Full pipeline: search -> filter -> synthesize a cited summary."""
+@app.get("/research", response_model=ResearchResult)
+async def research(query: str, max_results: int = 10) -> ResearchResult:
+    """Full pipeline: search -> filter -> synthesize -> verify a cited summary."""
     result = await _pipeline.ainvoke({"query": query, "max_results": max_results})
-    return result["summary"]
+    return ResearchResult(query=query, summary=result["summary"], papers=result["filtered_papers"])

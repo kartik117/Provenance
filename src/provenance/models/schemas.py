@@ -41,3 +41,11 @@ class ResearchSummary(BaseModel):
 
     overview: str
     citations: list[Citation] = Field(default_factory=list)
+
+
+class ResearchResult(BaseModel):
+    """Full /research response: the summary plus the papers it was grounded in."""
+
+    query: str
+    summary: ResearchSummary
+    papers: list[Paper] = Field(default_factory=list)
