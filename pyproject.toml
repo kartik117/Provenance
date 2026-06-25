@@ -26,6 +26,9 @@ dev = [
     "respx>=0.21",
     "ruff>=0.7",
 ]
+eval = [
+    "ragas>=0.4.3",
+]
 
 [build-system]
 requires = ["hatchling"]

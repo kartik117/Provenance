@@ -20,6 +20,8 @@ chroma_data/
 *.db
 *.sqlite3
 
+eval/results.json
+
 .DS_Store
 .vscode/
 .idea/
