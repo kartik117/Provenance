@@ -33,6 +33,7 @@ class Citation(BaseModel):
 
     claim: str
     source_ids: list[str] = Field(default_factory=list)
+    verified: bool | None = None
 
 
 class ResearchSummary(BaseModel):
