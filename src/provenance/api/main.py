@@ -1,15 +1,11 @@
-import asyncio
-import logging
-
 from fastapi import FastAPI
 
-from provenance.agents import dedupe
-from provenance.clients import ArxivClient, SemanticScholarClient
-from provenance.models import Paper
-
-logger = logging.getLogger(__name__)
+from provenance.agents import SearchAgent, dedupe
+from provenance.models import Paper, ResearchSummary
+from provenance.pipeline import build_pipeline
 
 app = FastAPI(title="Provenance", version="0.1.0")
+_pipeline = build_pipeline()
 
 
 @app.get("/health")
@@ -19,23 +15,13 @@ async def health() -> dict[str, str]:
 
 @app.get("/search", response_model=list[Paper])
 async def search(query: str, max_results: int = 10) -> list[Paper]:
-    """Search ArXiv and Semantic Scholar concurrently and merge the results.
-
-    Each source is queried independently so a rate limit or outage on one
-    (Semantic Scholar's unauthenticated tier is easy to hit) doesn't fail
-    the whole request.
-    """
-    results = await asyncio.gather(
-        ArxivClient().search(query, max_results=max_results),
-        SemanticScholarClient().search(query, max_results=max_results),
-        return_exceptions=True,
-    )
-
-    papers: list[Paper] = []
-    for result in results:
-        if isinstance(result, BaseException):
-            logger.warning("Search source failed: %s", result)
-            continue
-        papers.extend(result)
-
+    """Raw merged search results, with no relevance filtering or synthesis."""
+    papers = await SearchAgent().search(query, max_results=max_results)
     return dedupe(papers)
+
+
+@app.get("/research", response_model=ResearchSummary)
+async def research(query: str, max_results: int = 10) -> ResearchSummary:
+    """Full pipeline: search -> filter -> synthesize a cited summary."""
+    result = await _pipeline.ainvoke({"query": query, "max_results": max_results})
+    return result["summary"]

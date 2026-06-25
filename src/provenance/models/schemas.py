@@ -26,3 +26,17 @@ class Paper(BaseModel):
     def dedup_key(self) -> str:
         """Normalized title used to spot the same paper returned by multiple sources."""
         return " ".join(self.title.lower().split())
+
+
+class Citation(BaseModel):
+    """A single claim from the synthesized summary, tied to the papers that support it."""
+
+    claim: str
+    source_ids: list[str] = Field(default_factory=list)
+
+
+class ResearchSummary(BaseModel):
+    """Output of the Synthesis Agent: an overview plus the individual cited claims."""
+
+    overview: str
+    citations: list[Citation] = Field(default_factory=list)

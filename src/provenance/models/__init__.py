@@ -1,3 +1,3 @@
-from provenance.models.schemas import Paper, PaperSource
+from provenance.models.schemas import Citation, Paper, PaperSource, ResearchSummary
 
-__all__ = ["Paper", "PaperSource"]
+__all__ = ["Citation", "Paper", "PaperSource", "ResearchSummary"]

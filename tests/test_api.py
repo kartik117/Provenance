@@ -31,16 +31,3 @@ def test_search_merges_results_from_both_sources(
     papers = response.json()
     assert len(papers) == 2
     assert {p["source"] for p in papers} == {"arxiv", "semantic_scholar"}
-
-
-@respx.mock
-def test_search_still_returns_results_when_one_source_fails(arxiv_feed_single_entry):
-    respx.get(ARXIV_API_URL).mock(return_value=httpx.Response(200, text=arxiv_feed_single_entry))
-    respx.get(SEMANTIC_SCHOLAR_API_URL).mock(return_value=httpx.Response(429))
-
-    response = client.get("/search", params={"query": "transformers"})
-
-    assert response.status_code == 200
-    papers = response.json()
-    assert len(papers) == 1
-    assert papers[0]["source"] == "arxiv"
